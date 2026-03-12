@@ -61,7 +61,7 @@ async def on_message(message):
 
             # --- CHIAMATA AI ---
             completion = client_ai.chat.completions.create(
-                model="llama3-70b-8192",
+                model="llama-3.3-70b-versatile",
                 messages=[
                     {"role": "system", "content": "Riassumi questa conversazione Discord in modo breve e chiaro."},
                     {"role": "user", "content": chat_text}
