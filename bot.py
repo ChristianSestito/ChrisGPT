@@ -71,7 +71,7 @@ async def on_message(message):
             summary = completion.choices[0].message.content
 
         await message.reply(
-            f"📋 **Riassunto della conversazione:**\n{summary}",
+            f"**Riassunto della conversazione (solo degli ultimi 50 messaggi):**\n{summary}",
             mention_author=False
         )
 
