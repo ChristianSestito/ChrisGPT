@@ -45,10 +45,17 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
+    # Ignora i messaggi dei bot
     if message.author.bot:
         return
 
-    if bot.user in message.mentions:
+    # Controlla se il bot è menzionato
+    is_mention = bot.user in message.mentions
+    # Controlla se il messaggio è una reply a un messaggio del bot
+    is_reply_to_bot = message.reference and message.reference.resolved and message.reference.resolved.author == bot.user
+
+    # Fai il riassunto solo se menzionato e non è una reply al bot
+    if is_mention and not is_reply_to_bot:
         async with message.channel.typing():
 
             messages = []
