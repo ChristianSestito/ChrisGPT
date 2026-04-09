@@ -34,7 +34,7 @@ GROQ_KEY = os.getenv("GROQ_API_KEY")
 # --- LISTA NERA UTENTI ---
 # Inserisci qui gli ID degli utenti da ignorare (separati da virgola)
 # Esempio: BLACKLIST_ID = [123456789012345678, 987654321098765432]
-BLACKLIST_ID = [958840410644557834] 
+BLACKLIST_ID = [958840410644557834, 881168994151829554] 
 
 client_ai = OpenAI(
     api_key=GROQ_KEY,
