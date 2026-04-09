@@ -39,7 +39,8 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 # ==========================
 try:
     # Utilizziamo text2text-generation per massima compatibilità con IT5
-    summarizer = pipeline("text2text-generation", model="it5/it5-base-news-summarization")
+    # Modello molto più leggero (DistilBART ridotto)
+summarizer = pipeline("summarization", model="sshleifer/distilbart-cnn-6-6")
 except Exception as e:
     print(f"Errore caricamento modello: {e}")
     summarizer = pipeline("text-generation", model="it5/it5-base-news-summarization")
