@@ -1,4 +1,6 @@
 discord.py
-openai
+transformers
+torch
+sentencepiece
 python-dotenv
 flask
