@@ -31,7 +31,11 @@ load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
 GROQ_KEY = os.getenv("GROQ_API_KEY")
 
-# Usiamo Groq tramite l'interfaccia OpenAI (molto stabile)
+# --- LISTA NERA UTENTI ---
+# Inserisci qui gli ID degli utenti da ignorare (separati da virgola)
+# Esempio: BLACKLIST_ID = [123456789012345678, 987654321098765432]
+BLACKLIST_ID = [958840410644557834] 
+
 client_ai = OpenAI(
     api_key=GROQ_KEY,
     base_url="https://api.groq.com/openai/v1"
@@ -47,6 +51,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 @bot.event
 async def on_ready():
     print(f"Bot (Groq API) pronto come {bot.user}")
+    print(f"Utenti in blacklist: {len(BLACKLIST_ID)}")
 
 @bot.event
 async def on_message(message):
@@ -63,34 +68,49 @@ async def on_message(message):
     if is_mention and not is_reply_to_bot:
         async with message.channel.typing():
             try:
-                # 1. Recupero 100 messaggi
+                # 1. Recupero messaggi filtrati
                 messages = []
-                async for msg in message.channel.history(limit=101):
-                    if msg.content and msg.id != message.id:
+                # Cerchiamo di recuperare abbastanza messaggi per averne 100 validi
+                async for msg in message.channel.history(limit=150):
+                    # CONDIZIONI PER AGGIUNGERE IL MESSAGGIO:
+                    # - L'autore non deve essere in BLACKLIST_ID
+                    # - Il messaggio non deve essere il comando stesso
+                    # - Il messaggio deve avere del testo
+                    if (msg.author.id not in BLACKLIST_ID and 
+                        msg.id != message.id and 
+                        msg.content):
+                        
                         messages.append(f"{msg.author.name}: {msg.content}")
+                        
+                    # Se abbiamo raggiunto 100 messaggi filtrati, ci fermiamo
+                    if len(messages) >= 100:
+                        break
 
                 messages.reverse()
                 chat_text = "\n".join(messages)
 
-                # 2. Richiesta a Groq (Llama 3 è velocissimo e parla italiano)
+                # 2. Richiesta a Groq con prompt conciso
                 completion = client_ai.chat.completions.create(
                     model="llama-3.3-70b-versatile",
                     messages=[
                         {
                             "role": "system", 
-                            "content": "Sei un assistente che riassume conversazioni Discord. "
-                                       "Crea un riassunto in italiano, chiaro, usando punti elenco. "
-                                       "Ignora i messaggi di spam o i comandi del bot."
+                            "content": (
+                                "Sei un assistente riassuntivo. Sii ultra-conciso. "
+                                "Usa solo punti elenco brevi. Massimo 5-7 punti. "
+                                "Ignora spam e bot. Usa solo l'italiano."
+                            )
                         },
-                        {"role": "user", "content": f"Riassumi questi 100 messaggi:\n{chat_text}"}
-                    ]
+                        {"role": "user", "content": f"Riassumi questi messaggi:\n{chat_text}"}
+                    ],
+                    temperature=0.2
                 )
 
                 summary = completion.choices[0].message.content
 
                 # 3. Risposta
                 await message.reply(
-                    f"**Riassunto degli ultimi 100 messaggi:**\n{summary}",
+                    f"**Riassunto degli ultimi 100 messaggi (filtrati):**\n{summary}",
                     mention_author=False
                 )
 
@@ -102,4 +122,4 @@ async def on_message(message):
 if TOKEN and GROQ_KEY:
     bot.run(TOKEN)
 else:
-    print("ERRORE: Assicurati di avere DISCORD_TOKEN e GROQ_API_KEY nel file .env")
+    print("ERRORE: Mancano le chiavi API nel file .env")
